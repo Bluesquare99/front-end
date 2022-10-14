@@ -1,7 +1,6 @@
 <script>
     import * as THREE from 'three'
     import { Group, Mesh } from '@threlte/core'
-    import { CSG } from 'three-csg-ts';
     import { each } from 'svelte/internal';
 
     export let positionX;
