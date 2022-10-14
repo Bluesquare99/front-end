@@ -1,7 +1,6 @@
 <script>
   import * as THREE from 'three'
   import {Group, Mesh, Object3DInstance, useFrame} from '@threlte/core'
-  import { CSG } from 'three-csg-ts';
 
   import Spinner from './Spinner.svelte'
   import Window from './Window.svelte'
