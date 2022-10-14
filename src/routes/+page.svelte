@@ -52,7 +52,7 @@
 		playing = !playing
 		console.log(audioPlayer);
 		if(!playing) audioPlayer.pause
-		else audioPlayer = new Audio(stations[0]['stream_url']).play()
+		else  new Audio(stations[0]['stream_url']).play()
 	}
 
 	let cursorLeft, cursorTop;
