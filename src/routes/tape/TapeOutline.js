@@ -1,7 +1,7 @@
 
 import * as THREE from 'three'
 import {Group, Mesh, Object3DInstance } from '@threlte/core'
-import { CSG } from '/three-csg-ts';
+import { CSG } from 'three-csg-ts';
 
 // Params
 const params = {
