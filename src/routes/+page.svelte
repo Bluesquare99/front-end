@@ -15,6 +15,7 @@
 		Object3DInstance
 	} from '@threlte/core'
 
+
 	import welcome from '$lib/images/svelte-welcome.webp';
 	import welcome_fallback from '$lib/images/svelte-welcome.png';
 	import { each } from 'svelte/internal';
@@ -61,7 +62,16 @@
 		cursorLeft = event.clientX + "px"
 		cursorTop = event.clientY + "px"
 	}
-	
+
+	// Listen for messages
+	// socket.addEventListener('message', (event) => {
+	// 	console.log('Message from server ', event.data);
+	// });
+	// ws.addEventListener("message", (message) => {
+	//     console.log(message);
+	//     // Parse the incoming message here
+	//     // const data = JSON.parse(message);
+	// });
 </script>
 
 <svelte:head>

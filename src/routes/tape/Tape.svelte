@@ -2,9 +2,9 @@
   import * as THREE from 'three'
   import {Group, Mesh, Object3DInstance, useFrame} from '@threlte/core'
 
+  import TapeOutline from './TapeOutline.js'
   import Spinner from './Spinner.svelte'
   import Window from './Window.svelte'
-  import TapeOutline from './TapeOutline.js'
 
   import { createEventDispatcher } from 'svelte';
 
@@ -15,6 +15,7 @@
       backgroundColor: '#0b190e',
       spinnerColor: '#ffffff'
   };
+
   let tapeOutline = new TapeOutline()
 
   // Spinner rotation
