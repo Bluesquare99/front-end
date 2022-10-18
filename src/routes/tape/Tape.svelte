@@ -5,6 +5,7 @@
   import TapeOutline from './TapeOutline.js'
   import Spinner from './Spinner.svelte'
   import Window from './Window.svelte'
+  import FunnyBalls from './PopSmoke.svelte'
 
   import { createEventDispatcher } from 'svelte';
 
@@ -35,6 +36,7 @@
 </script>
   
 <Group>
+  <FunnyBalls />
   <Mesh
     geometry={tapeOutline.tapeGeometry}
     material={tapeOutline.tapeMaterial}

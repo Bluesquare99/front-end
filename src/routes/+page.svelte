@@ -12,7 +12,8 @@
 		Mesh,
 		OrbitControls,
 		PerspectiveCamera,
-		Object3DInstance
+		Object3DInstance,
+		Fog
 	} from '@threlte/core'
 
 
@@ -101,7 +102,6 @@
       	<DirectionalLight color={'#ffffff'} intensity={0.7} position={{ x: -40, y: 40, z: 300 }}></DirectionalLight>
      	<PointLight color={'#ffffff'} intensity={2.5} distance={2} decay={0.2} position={{ x: -40, y: 40, z: 300 }}></PointLight>
 
-      
 		<Tape on:audioPlay={handleAudioPlay}/>
     </Canvas>
 </section>

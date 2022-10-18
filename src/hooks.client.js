@@ -1,38 +1,25 @@
-console.log('yo homie')
+import { connect, io } from "socket.io-client";
+import { connected } from './stores.js'
+import { onDestroy } from 'svelte'
 
-import { io } from "socket.io-client";
+let socketConnected = false;
 
-let socket = new WebSocket('ws://localhost:8000/ws');
-socket.onopen = function(e) {
+const unsubscribe = connected.subscribe((value) => (socketConnected = value));
+console.log(socketConnected)
+
+let socket
+
+if (socketConnected === false)
+{
+    console.log('hi doggie');
+    socket = new WebSocket('ws://localhost:8000/ws/1');
+}
+
+socket.onopen = function(event) {
     console.log("[open] Connection established");
-    socket.send("hi")
-    socket.send("ho")
+    connected.set(true)
 };
 
 socket.onmessage = function(event) {
     console.log("[message] Data received from server, ", event);
-
-    // const arrayBuffer = event.data;
-
-    // image_Slice.src = 'data:image/jpg;base64,' + arrayBuffer;
-    // console.log("size= "+ arrayBuffer.length);
 };
-// socket.emit('hello!')
-
-// import { WebSocket as holy} from "ws";
-// setInterval(() => console.log(socket.connected), 1000)
-// console.log(socket);
-
-
-// // Create WebSocket connection.
-// const socket = new holy('ws://localhost:8000/ws');
-// console.log('made it past');
-// // setInterval(() => console.log("you there?"), 1000)
-
-
-
-// // Connection opened
-// socket.addEventListener('open', (event) => {
-//     console.log('hello baby');
-//     // socket.send('Hello Server!');
-// });

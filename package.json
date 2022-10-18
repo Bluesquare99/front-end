@@ -30,6 +30,7 @@
 	"dependencies": {
 		"@threlte/core": "^4.3.2",
 		"@threlte/extras": "^4.3.0",
+		"hsluv": "^1.0.0",
 		"socket.io": "^4.5.2",
 		"socket.io-client": "^4.5.2",
 		"three": "^0.145.0",
