@@ -1,15 +1,15 @@
 @import '@fontsource/fira-mono';
 
 @font-face {
-    font-family: "Trim-Mono";
-    src: url("/fonts/TrimMono-Medium.otf") format("opentype");
+	font-family: "Trim-Mono";
+	src: url("/fonts/TrimMono-Medium.otf") format("opentype");
 }
 
 :root {
 	--font-body: Arial, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu,
 		Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 	--font-mono: 'Fira Mono', monospace;
-	--color-bg-0: rgb(64, 83, 99);
+	--color-bg-0: rgb(238, 94, 46);
 	--color-bg-1: hsl(208, 39%, 37%);
 	--color-bg-2: hsl(224, 44%, 95%);
 	--color-theme-1: #ff3e00;
@@ -24,10 +24,6 @@
 body {
 	min-height: 100vh;
 	margin: 0;
-	background-attachment: fixed;
-	background-color: var(--color-bg-1);
-	background-size: 100vw 100vh;
-	
 }
 
 h1,
