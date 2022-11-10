@@ -1,17 +1,15 @@
 import { sveltekit } from '@sveltejs/kit/vite';
-import { esbuildCommonjs } from '@originjs/vite-plugin-commonjs'
+import { esbuildCommonjs } from '@originjs/vite-plugin-commonjs';
 
 /** @type {import('vite').UserConfig} */
 const config = {
 	optimizeDeps: {
 		esbuildOptions: {
-			plugins: [
-				esbuildCommonjs(['node-cron'])
-			]
+			plugins: [esbuildCommonjs(['node-cron'])]
 		}
 	},
 	define: {
-		"global": {},
+		global: {},
 		'process.env': process.env
 	},
 	plugins: [sveltekit()],

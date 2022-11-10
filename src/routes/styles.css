@@ -1,8 +1,8 @@
 @import '@fontsource/fira-mono';
 
 @font-face {
-	font-family: "Trim-Mono";
-	src: url("/fonts/TrimMono-Medium.otf") format("opentype");
+	font-family: 'Trim-Mono';
+	src: url('/fonts/TrimMono-Medium.otf') format('opentype');
 }
 
 :root {

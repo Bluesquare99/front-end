@@ -1,174 +1,263 @@
 <script>
 	import { getStores, navigating, page, updated } from '$app/stores';
-	import * as knobby from 'svelte-knobby';
-	import { currentShows, currentShowsPairs } from '../stores.js'
+	import { currentShows, currentShowsPairs, textC, selectedC } from '../stores.js';
 	import { get } from 'svelte/store';
-	import { each, object_without_properties } from 'svelte/internal';
-
-	/**
-	 * SECTION: Gui
-	 */
-	const controls = knobby.panel({
-	  // primitive values are handled automatically
-	  message: 'Hello World!',
-	  color: '#d15e47',
-	  clicks: 0,
-	  checked: false,
-  
-	  // specify options by using a { value } object
-	  constrained: {
-		// any object can be given a $label which will
-		// appear in place of the property name
-		$label: 'labelled input',
-		value: 50,
-		min: 0,
-		max: 100,
-		step: 1
-	  },
-  
-	  // objects that can't be 'interpreted' (see below)
-	  // are treated as folders
-	  folder: {
-		$label: 'labelled folder',
-		a: 1, // accessed as $controls.folder.a
-		b: 2,
-		nested: {
-		  c: 3, // accessed as $controls.folder.nested.c
-		  d: 4
-		}
-	  }
-	});
-	$controls.message = 'Hello Knobby!';
-
-	/**
-	 * SECTION: Selecting different stations
-	*/
-	let selectedIndexStations = 0
-	let selectedIndexShows = 0
-
-	function setCorrespondingIndex(index, toStationOrShow)
-	{
-		if (toStationOrShow === 'stationToShow')
-		{
-			console.log('inside bp 1');
-			// for station => show
-			const correspondingShow = $currentShowsPairs[currentStations[index]]
-			currentShowNames.forEach((show, i) =>
-			{
-				if (show === correspondingShow) selectedIndexShows = i
-			})
-		}
-	}
-
-	function onKeyDown(e)
-	{
-		switch (e.keyCode) {
-			//down
-			case 40:
-				if (selectedIndexStations < currentStations.length - 1) 
-				{
-					selectedIndexStations++
-				}
-				break
-			//up
-			case 38:
-				if (selectedIndexStations > 0) 
-				{
-					selectedIndexStations--
-				}
-				break
-		}
-		const correspondingShow = setCorrespondingIndex(selectedIndexStations, 'stationToShow')
-
-		console.log(`selectedIndexStations: ${selectedIndexStations}`);
-		console.log(`selectedIndexShows: ${correspondingShow}`);
-	}
+	import { each, object_without_properties, xlink_attr } from 'svelte/internal';
+	import { tweened } from 'svelte/motion';
+	import { cubicOut } from 'svelte/easing';
+	import DanceFloor from './shifting-grid/DanceFloor.svelte'
+	// import Globe from './globe/Globe.svelte'
+	
+	import { AmbientLight, Canvas, PerspectiveCamera, OrbitControls, Object3DInstance, useFrame, useThrelte } from '@threlte/core';
+	import * as THREE from 'three';
+    import { onMount } from 'svelte';
 
 	/**
 	 * SECTION: Unpacking Store
-	*/
-	let initialUpdate = false
+	 */
+	let initialUpdate = false;
 
-	$: console.log({$currentShows, $page, $$props});
-	export let data
-	$: curShows = data.currentShows
+	// $: console.log({ $currentShows, $page, $$props });
+	export let data;
+	$: curShows = data.currentShows;
 	$: {
-		if (initialUpdate === false)
-		{
-		currentShows.update(old => curShows)
-	}
+		if (initialUpdate === false) {
+			currentShows.update((old) => curShows);
+		}
 	}
 
 	$: currentStations = Object.keys($currentShowsPairs).sort(function (a, b) {
-			return a.localeCompare(b);
-		});
+		return a.localeCompare(b);
+	});
 	$: currentShowNames = Object.values($currentShowsPairs).sort(function (a, b) {
-			return a.localeCompare(b);
-		});
+		return a.localeCompare(b);
+	});
 	$: selected = {
-		'station': currentStations ? currentStations[selectedIndexStations] : 'None yet',
-		'show': currentShowNames ? currentShowNames[selectedIndexShows] : 'None yet'
+		station: currentStations ? currentStations[selectedIndexStations] : 'None yet',
+		show: currentShowNames ? currentShowNames[selectedIndexShows] : 'None yet'
+	};
+	$: console.log('selected show names', currentShowNames);
+	$: console.log('selected index shows', selectedIndexShows);
+	$: console.log('selected station and show', selected);
+	
+	/**
+	 * SECTION: Selecting different stations
+	 */
+	let selectedIndexStations = 0;
+	$: selectedIndexShows = (currentStations[0] ? getCorrespondingIndex(0, 'stationToShow') : 0)
+
+	function getCorrespondingIndex(index, toStationOrShow) {
+		let selectedIndex = -1
+
+		if (toStationOrShow === 'stationToShow') {
+			// for station => show
+			const correspondingShow = $currentShowsPairs[currentStations[index]];
+			currentShowNames.forEach((show, i) => {
+				if (show === correspondingShow) 
+				{
+					selectedIndex = i;
+				}
+			});
+		}
+		return selectedIndex;
 	}
-	$: console.log(currentStations, currentShowNames);
+
+	function onKeyDown(e) {
+		switch (e.keyCode) {
+			//down
+			case 40:
+				if (selectedIndexStations < currentStations.length - 1) {
+					selectedIndexStations++;
+				}
+				break;
+			//up
+			case 38:
+				if (selectedIndexStations > 0) {
+					selectedIndexStations--;
+				}
+				break;
+		}
+		// get index of show from index of station
+		const correspondingShowIndex = getCorrespondingIndex(selectedIndexStations, 'stationToShow');
+		selectedIndexShows = correspondingShowIndex;
+		
+		selectedStationBarHeight.set(stationRowHeights[selectedIndexStations]);
+		selectedShowBarHeight.set(showRowHeights[correspondingShowIndex]);
+	}
 
 	/**
 	 * SECTION: Create smooth movement for backing div
 	 */
-	export let top
-	export let left
+	// creating one for stations and one for rows
+	$: stationRowElements = [];
+	$: showRowElements = [];
 
-	let el
+	$: stationRowHeights = stationRowElements.map((x) => x.offsetTop + x.clientHeight);
+	$: showRowHeights = showRowElements.map((x) => x.offsetTop + x.clientHeight);
 
-	// reactive block will rerun each time el, top, or left changes
-	$: if (el) {
-		el.style.top = top + 'px'
-		el.style.left = left + 'px'
-		console.log(el.style);
+	$: selectedStationBarHeight = tweened(0, {
+		duration: 1200,
+		easing: cubicOut
+	});
+	$: selectedShowBarHeight = tweened(0, {
+		duration: 2400,
+		easing: cubicOut
+	});
+
+	$: if (stationRowHeights[0]) selectedStationBarHeight.set(stationRowHeights[0]);
+	$: if (showRowHeights[0]) {
+		const correspondingShowIndex = getCorrespondingIndex(selectedIndexStations, 'stationToShow');
+		selectedShowBarHeight.set(showRowHeights[correspondingShowIndex]);
 	}
-  </script>
 
-  <svelte:window on:keydown|preventDefault={onKeyDown} />
+	/**
+	 * SECTION: CREATING A GLOBE
+	 */
+	let globeMap
+	let globeDisco
 
-  <div class="holder">
-	<div class="panel" style="background-color: {'white'}">
-		<div class="divider">
+	let rotationX = 0
+	let rotationY = 0
+
+	const handleRotateButtonClick = () => 
+	{
+		const latitudes = [53, 37, 30]
+		const longitudes = [6, 122, 97]
+
+		const rand = Math.floor(Math.random() * 3);
+		rotationX = (Math.PI * 2) * latitudes[rand] / 360
+		rotationY = (Math.PI * 2) * longitudes[rand] / 360
+		console.log(latitudes[rand], longitudes[rand])
+		console.log(rotationX, rotationY);
+	}
+    
+	onMount(async () => {
+        const initialGlobe = (await import('three-globe')).default;
+
+        // SUBSECTION: Map Globe
+		const stationStats = [
+			{
+				name: 'DDR',
+				lat: 53.34766040284911,
+				lng: -6.270136955821768
+			},
+			{
+				name: 'BFF',
+				lat: 37.7639450483543, 
+				lng: -122.41844434668297
+			},
+			{
+				name: 'KOOP',
+				lat: 30.28866549322267,
+				lng: -97.70617147356026
+			}
+		]
+		const stationPointsArray = stationStats.map(station => {
+			const container = {};
+
+			container['lat'] = station['lat'],
+			container['lng'] = station['lng'],
+			container['color'] = 'red',
+			container['altitude'] = 0.04,
+			container['radius'] = .6
+
+			return container;
+		})
+
+        globeMap = new initialGlobe()
+            .globeImageUrl('src/lib/images/earf2.png')
+			.pointsData(stationPointsArray)
+			.pointAltitude('altitude')
+			.pointRadius('radius')
+			.pointColor('color')
+		        
+        // SUBSECTION: Disco Globe
+        const TILE_MARGIN = 0.35; // degrees
+        const GRID_SIZE = [60, 20];
+        const tileWidth = 360 / GRID_SIZE[0];
+        const tileHeight = 180 / GRID_SIZE[1];
+        const tilesData = [];
+        [...Array(GRID_SIZE[0]).keys()].forEach(lngIdx =>
+			[...Array(GRID_SIZE[1]).keys()].forEach(latIdx =>
+				tilesData.push({
+				lng: -180 + lngIdx * tileWidth,
+				lat: -90 + (latIdx + 0.5) * tileHeight,
+				material: new THREE.MeshStandardMaterial({color: "#C0C0C0", metalness: 0.2 })
+				})
+        	)
+        );
+
+		globeDisco = new initialGlobe()
+			.tilesData(tilesData)
+			.tileWidth(tileWidth - TILE_MARGIN)
+			.tileHeight(tileHeight - TILE_MARGIN)
+			.tileMaterial('material');
+	});
+
+	// class:selected={selected['show'] === showName}
+	// <div class="selected-station-bar" style="top: {`${$selectedStationBarHeight}px`};" />
+	// <div class="selected-show-bar" style="top: {`${$selectedShowBarHeight}px`};" />
+</script>
+
+<button on:click={handleRotateButtonClick}>click me if you dare</button>
+
+<svelte:window on:keydown|preventDefault={onKeyDown} />
+
+<div class="holder">
+	<div class="panel">
+		<div class="divider divider-right">
 			<p class="title">stations</p>
-			{#each currentStations as station}
-				<div
-				class="item-holder" 
-				class:selected={selected['station'] === station
-				}>
-				<p 
+			{#each currentStations as station, index}
+				<p
 					class="list-item"
-					>{station}</p>
-		</div>
+					bind:this={stationRowElements[index]}
+					style="color: {(selected['station'] === station) ? $selectedC : $textC};" 
+				>
+					{station}
+				</p>
 			{/each}
 		</div>
-		<div class="divider">
+		<div class="groovy-div">
+			<div>
+				<Canvas>
+					<PerspectiveCamera position={{ x: 0, y: 0, z: 120 }} fov={400} near={0.1} far={1000} >
+						<OrbitControls
+						autoRotate={false}
+						enableZoom={false}
+						target={{ y: 0.5 }}
+						/>
+					</PerspectiveCamera>
+					<AmbientLight color={'#ffffff'} intensity={1} />
+					<Object3DInstance object={globeMap} scale={0.4} rotation={{x: rotationX ,y: rotationY}} />
+				</Canvas>
+			</div>
+			<div>
+				<DanceFloor />
+			</div>
+		</div>
+		<div class="divider divider-left">
 			<p class="title">show</p>
-			{#each currentShowNames as showName}
-				<div
-					class="item-holder" 
-					class:selected={selected['show'] === showName}
-					bind:this={el}>
-					<p
-						class="list-item"
-						>{showName}</p>
-				</div>
+			{#each currentShowNames as showName, index}
+				<p 
+					class="list-item" 
+					bind:this={showRowElements[index]}
+					style="color: {(selected['show'] === showName) ? $selectedC : $textC};" 
+					>{showName}</p>
 			{/each}
 		</div>
 	</div>
 </div>
-  
 
-  <style>
+<style>
 	@font-face {
-    font-family: "Trim-Mono";
-    src: url("/fonts/TrimMono-Medium.otf") format("opentype");
-    }
+		font-family: 'Trim-Mono';
+		src: url('/fonts/TrimMono-Medium.otf') format('opentype');
+	}
 	.holder {
-		font-family: "Trim-Mono";
+		font-family: 'Trim-Mono';
 		margin: auto;
+		font-size: 1.2rem;
+		padding: 40px;
 	}
 	.panel {
 		height: 90vh;
@@ -176,18 +265,56 @@
 		display: flex;
 		justify-content: space-between;
 		align-items: center;
-		gap: 16px;
 		margin: auto auto;
+		
 	}
 
 	.divider {
 		height: 80%;
-		width: 16rem;
-		border: 1.5px solid black;
-		padding: 40px 0px;
+		width: 24rem;
+
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		border: 1px solid black;
+	}
+	
+	.groovy-div {
+		height: 80%;
+		width: 24rem;
+
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		border: 1px solid black;
+		justify-content: space-around;
 	}
 
-	#vibe {	
+	.selected-station-bar {
+		position: absolute;
+		height: 2px;
+		width: 12%;
+
+		left: 20%;
+		right: 0;
+		margin-right: auto;
+
+		background-color: #ffffff;
+	}
+	
+	.selected-show-bar {
+		position: absolute;
+		height: 2px;
+		width: 12%;
+
+		left: 0;
+		right: 20%;
+		margin-left: auto;
+
+		background-color: #ffffff;
+	}
+
+	#vibe {
 		height: 40%;
 		border: 1.5px solid black;
 	}
@@ -198,21 +325,23 @@
 		text-align: center;
 	}
 
-	.item-holder {
-		height: 10%;
-		display: flex;
-		flex-direction: column;
-		align-items: center;
-
-		margin: 8px 12px;
+	.list-item {
+		text-align: center;
+		color: lightsteelblue;
 	}
 
 	.selected {
-		background-color: yellowgreen;
-		border: 1px solid black;
+		color: darkslategray;
 	}
 
-	.list-item {
-		text-align: center;
+	.groovy-div {
+		display: flex;
+		flex-direction: column;
+		gap: 40px;
+		align-items: center;
 	}
-  </style>
+
+
+</style>
+
+
