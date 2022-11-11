@@ -6,14 +6,13 @@
 	import { tweened } from 'svelte/motion';
 	import { cubicOut } from 'svelte/easing';
 	import DanceFloor from './shifting-grid/DanceFloor.svelte'
-	// import Globe from './globe/Globe.svelte'
 	
 	import { AmbientLight, Canvas, PerspectiveCamera, OrbitControls, Object3DInstance, useFrame, useThrelte } from '@threlte/core';
 	import * as THREE from 'three';
     import { onMount } from 'svelte';
 
 	/**
-	 * SECTION: Unpacking Store
+	 * SECTION: Loading initial show values
 	 */
 	let initialUpdate = false;
 
@@ -83,20 +82,20 @@
 	}
 
 	/**
-	 * SECTION: Create smooth movement for backing div
-	 */
-	$: stationRowElements = [];
-	$: showRowElements = [];
-
-	$: correspondingShowIndex = getCorrespondingIndex(selectedIndexStations, 'stationToShow');
-	/**
 	 * SECTION: CREATING A GLOBE
 	 */
 	let globeMap
 	let globeDisco
 
-	let rotationX = 0
-	let rotationY = 0
+	$: rotationX = tweened(0, {
+		duration: 1200,
+		easing: cubicOut
+	});
+	
+	$: rotationY = tweened(0, {
+		duration: 1200,
+		easing: cubicOut
+	});
 
 	const handleRotateButtonClick = () => 
 	{
@@ -104,10 +103,8 @@
 		const longitudes = [6, 122, 97]
 
 		const rand = Math.floor(Math.random() * 3);
-		rotationX = (Math.PI * 2) * latitudes[rand] / 360
-		rotationY = (Math.PI * 2) * longitudes[rand] / 360
-		console.log(latitudes[rand], longitudes[rand])
-		console.log(rotationX, rotationY);
+		rotationX.set((Math.PI * 2) * latitudes[rand] / 360)
+		rotationY.set((Math.PI * 2) * longitudes[rand] / 360)
 	}
     
 	onMount(async () => {
@@ -189,7 +186,6 @@
 			{#each currentStations as station, index}
 				<p
 					class="list-item"
-					bind:this={stationRowElements[index]}
 					style="color: {(selected['station'] === station) ? $selectedC : $textC};" 
 				>
 					{station}
@@ -219,7 +215,6 @@
 			{#each currentShowNames as showName, index}
 				<p 
 					class="list-item" 
-					bind:this={showRowElements[index]}
 					style="color: {(selected['show'] === showName) ? $selectedC : $textC};" 
 					>{showName}</p>
 			{/each}
