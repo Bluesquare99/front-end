@@ -80,36 +80,15 @@
 		// get index of show from index of station
 		const correspondingShowIndex = getCorrespondingIndex(selectedIndexStations, 'stationToShow');
 		selectedIndexShows = correspondingShowIndex;
-		
-		selectedStationBarHeight.set(stationRowHeights[selectedIndexStations]);
-		selectedShowBarHeight.set(showRowHeights[correspondingShowIndex]);
 	}
 
 	/**
 	 * SECTION: Create smooth movement for backing div
 	 */
-	// creating one for stations and one for rows
 	$: stationRowElements = [];
 	$: showRowElements = [];
 
-	$: stationRowHeights = stationRowElements.map((x) => x.offsetTop + x.clientHeight);
-	$: showRowHeights = showRowElements.map((x) => x.offsetTop + x.clientHeight);
-
-	$: selectedStationBarHeight = tweened(0, {
-		duration: 1200,
-		easing: cubicOut
-	});
-	$: selectedShowBarHeight = tweened(0, {
-		duration: 2400,
-		easing: cubicOut
-	});
-
-	$: if (stationRowHeights[0]) selectedStationBarHeight.set(stationRowHeights[0]);
-	$: if (showRowHeights[0]) {
-		const correspondingShowIndex = getCorrespondingIndex(selectedIndexStations, 'stationToShow');
-		selectedShowBarHeight.set(showRowHeights[correspondingShowIndex]);
-	}
-
+	$: correspondingShowIndex = getCorrespondingIndex(selectedIndexStations, 'stationToShow');
 	/**
 	 * SECTION: CREATING A GLOBE
 	 */
