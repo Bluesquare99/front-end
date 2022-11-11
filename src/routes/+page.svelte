@@ -97,14 +97,16 @@
 		easing: cubicOut
 	});
 
+	console.log(`rotationX equals ${rotationX}; rotationY equals ${rotationY}`);
+
 	const handleRotateButtonClick = () => 
 	{
 		const latitudes = [53, 37, 30]
 		const longitudes = [6, 122, 97]
-
 		const rand = Math.floor(Math.random() * 3);
 		rotationX.set((Math.PI * 2) * latitudes[rand] / 360)
 		rotationY.set((Math.PI * 2) * longitudes[rand] / 360)
+		console.log(`rotationX equals ${rotationX}; rotationY equals ${rotationY}`);
 	}
     
 	onMount(async () => {
