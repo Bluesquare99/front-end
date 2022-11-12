@@ -10,6 +10,8 @@ export const currentShowsPairs = derived(currentShows, ($currentShows) => {
 	return res;
 });
 
+// export const currentShowsCoordinates = derived(currentShowsPairs)
+
 export const connected = writable(false);
 
 export const backgroundC = writable('#1b3630');

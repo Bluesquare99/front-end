@@ -51,6 +51,7 @@
 				easing: cubicOut
 			});
 		}
+		
 	$: console.log('selected show names', currentShowNames);
 	$: console.log('selected index shows', selectedIndexShows);
 	$: console.log('selected station and show', selected);
