@@ -37,24 +37,38 @@
 		station: currentStations ? currentStations[selectedIndexStations] : 'None yet',
 		show: currentShowNames ? currentShowNames[selectedIndexShows] : 'None yet'
 	};
+	$: console.log('line 40, selected station', selected['station']);
 	
-	let rotationX, rotationY
-	$: if (selected['station'] !== 'None yet')
+	const stationCoordinates = 
 		{
-			rotationX = tweened(stationCoordinates[selected['station']]['lat'], {
-				duration: 800,
-				easing: cubicOut
-			});
-
-			rotationY = tweened(stationCoordinates[selected['station']]['lng'], {
-				duration: 800,
-				easing: cubicOut
-			});
+			'ddr': {
+				lat: 53.34766040284911,
+				lng: -6.270136955821768
+			},
+			'bff': {
+				lat: 37.7639450483543, 
+				lng: -122.41844434668297
+			},
+			'koop': {
+				lat: 30.28866549322267,
+				lng: -97.70617147356026
+			}
 		}
-		
-	$: console.log('selected show names', currentShowNames);
-	$: console.log('selected index shows', selectedIndexShows);
-	$: console.log('selected station and show', selected);
+
+	
+	let rotationX = tweened(0, {
+				duration: 800,
+				easing: cubicOut
+			});
+	
+	let rotationY = tweened(0, {
+		duration: 800,
+		easing: cubicOut
+	});
+
+	// $: rotationX.set(Math.PI * 2 * (stationCoordinates[selected['station']]['lat'] / 360))
+	// $: rotationY.set(Math.PI * 2 * (stationCoordinates[selected['station']]['lng'] / 360))
+
 
 	/**
 	 * SECTION: CREATING A GLOBE
@@ -66,11 +80,11 @@
         const initialGlobe = (await import('three-globe')).default;
 
         // Subsec: Map Globe
-		const stationPointsArray = stationStats.map(station => {
+		const stationPointsArray = Object.keys(stationCoordinates).map(station => {
 			const container = {};
 
-			container['lat'] = station['lat'],
-			container['lng'] = station['lng'],
+			container['lat'] = stationCoordinates[station]['lat'],
+			container['lng'] = stationCoordinates[station]['lng'],
 			container['color'] = 'red',
 			container['altitude'] = 0.04,
 			container['radius'] = .6
@@ -149,8 +163,12 @@
 		const correspondingShowIndex = getCorrespondingIndex(selectedIndexStations, 'stationToShow');
 		selectedIndexShows = correspondingShowIndex;
 
-		rotationX.set()
-		rotationY.set()
+		const newLatitude = stationCoordinates[currentStations[selectedIndexStations]]['lat']
+
+		const newLongitude= stationCoordinates[currentStations[selectedIndexStations]]['lng']
+
+		rotationX.set(Math.PI * 2 * Math.abs(newLatitude / 360))
+		rotationY.set(Math.PI * 2 * Math.abs(newLongitude / 360))
 	}
 </script>
 
