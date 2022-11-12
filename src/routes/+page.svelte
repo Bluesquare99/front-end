@@ -28,21 +28,89 @@
 	$: currentStations = Object.keys($currentShowsPairs).sort(function (a, b) {
 		return a.localeCompare(b);
 	});
+	
 	$: currentShowNames = Object.values($currentShowsPairs).sort(function (a, b) {
 		return a.localeCompare(b);
 	});
+
 	$: selected = {
 		station: currentStations ? currentStations[selectedIndexStations] : 'None yet',
 		show: currentShowNames ? currentShowNames[selectedIndexShows] : 'None yet'
 	};
+
+	let rotationX, rotationY
+	$: if (selected['station'] !== 'None yet')
+		{
+			rotationX = tweened(stationCoordinates[selected['station']]['lat'], {
+				duration: 800,
+				easing: cubicOut
+			});
+
+			rotationY = tweened(stationCoordinates[selected['station']]['lng'], {
+				duration: 800,
+				easing: cubicOut
+			});
+		}
 	$: console.log('selected show names', currentShowNames);
 	$: console.log('selected index shows', selectedIndexShows);
 	$: console.log('selected station and show', selected);
+
+	/**
+	 * SECTION: CREATING A GLOBE
+	 */
+	let globeMap;
+	let globeDisco;
 	
+	onMount(async () => {
+        const initialGlobe = (await import('three-globe')).default;
+
+        // Subsec: Map Globe
+		const stationPointsArray = stationStats.map(station => {
+			const container = {};
+
+			container['lat'] = station['lat'],
+			container['lng'] = station['lng'],
+			container['color'] = 'red',
+			container['altitude'] = 0.04,
+			container['radius'] = .6
+
+			return container;
+		})
+
+        globeMap = new initialGlobe()
+            .globeImageUrl('src/lib/images/earf2.png')
+			.pointsData(stationPointsArray)
+			.pointAltitude('altitude')
+			.pointRadius('radius')
+			.pointColor('color')
+		        
+        // Subsec: Disco Globe
+        const TILE_MARGIN = 0.35; // degrees
+        const GRID_SIZE = [60, 20];
+        const tileWidth = 360 / GRID_SIZE[0];
+        const tileHeight = 180 / GRID_SIZE[1];
+        const tilesData = [];
+        [...Array(GRID_SIZE[0]).keys()].forEach(lngIdx =>
+			[...Array(GRID_SIZE[1]).keys()].forEach(latIdx =>
+				tilesData.push({
+				lng: -180 + lngIdx * tileWidth,
+				lat: -90 + (latIdx + 0.5) * tileHeight,
+				material: new THREE.MeshStandardMaterial({color: "#C0C0C0", metalness: 0.2 })
+				})
+        	)
+        );
+
+		globeDisco = new initialGlobe()
+			.tilesData(tilesData)
+			.tileWidth(tileWidth - TILE_MARGIN)
+			.tileHeight(tileHeight - TILE_MARGIN)
+			.tileMaterial('material');
+	});
+
 	/**
 	 * SECTION: Selecting different stations
 	 */
-	let selectedIndexStations = 0;
+	 let selectedIndexStations = 0;
 	$: selectedIndexShows = (currentStations[0] ? getCorrespondingIndex(0, 'stationToShow') : 0)
 
 	function getCorrespondingIndex(index, toStationOrShow) {
@@ -79,105 +147,11 @@
 		// get index of show from index of station
 		const correspondingShowIndex = getCorrespondingIndex(selectedIndexStations, 'stationToShow');
 		selectedIndexShows = correspondingShowIndex;
+
+		rotationX.set()
+		rotationY.set()
 	}
-
-	/**
-	 * SECTION: CREATING A GLOBE
-	 */
-	let globeMap
-	let globeDisco
-
-	$: rotationX = tweened(0, {
-		duration: 1200,
-		easing: cubicOut
-	});
-	
-	$: rotationY = tweened(0, {
-		duration: 1200,
-		easing: cubicOut
-	});
-
-	console.log(`rotationX equals ${rotationX}; rotationY equals ${rotationY}`);
-
-	const handleRotateButtonClick = () => 
-	{
-		const latitudes = [53, 37, 30]
-		const longitudes = [6, 122, 97]
-		const rand = Math.floor(Math.random() * 3);
-		rotationX.set((Math.PI * 2) * latitudes[rand] / 360)
-		rotationY.set((Math.PI * 2) * longitudes[rand] / 360)
-		console.log(`rotationX equals ${rotationX}; rotationY equals ${rotationY}`);
-	}
-    
-	onMount(async () => {
-        const initialGlobe = (await import('three-globe')).default;
-
-        // SUBSECTION: Map Globe
-		const stationStats = [
-			{
-				name: 'DDR',
-				lat: 53.34766040284911,
-				lng: -6.270136955821768
-			},
-			{
-				name: 'BFF',
-				lat: 37.7639450483543, 
-				lng: -122.41844434668297
-			},
-			{
-				name: 'KOOP',
-				lat: 30.28866549322267,
-				lng: -97.70617147356026
-			}
-		]
-		const stationPointsArray = stationStats.map(station => {
-			const container = {};
-
-			container['lat'] = station['lat'],
-			container['lng'] = station['lng'],
-			container['color'] = 'red',
-			container['altitude'] = 0.04,
-			container['radius'] = .6
-
-			return container;
-		})
-
-        globeMap = new initialGlobe()
-            .globeImageUrl('src/lib/images/earf2.png')
-			.pointsData(stationPointsArray)
-			.pointAltitude('altitude')
-			.pointRadius('radius')
-			.pointColor('color')
-		        
-        // SUBSECTION: Disco Globe
-        const TILE_MARGIN = 0.35; // degrees
-        const GRID_SIZE = [60, 20];
-        const tileWidth = 360 / GRID_SIZE[0];
-        const tileHeight = 180 / GRID_SIZE[1];
-        const tilesData = [];
-        [...Array(GRID_SIZE[0]).keys()].forEach(lngIdx =>
-			[...Array(GRID_SIZE[1]).keys()].forEach(latIdx =>
-				tilesData.push({
-				lng: -180 + lngIdx * tileWidth,
-				lat: -90 + (latIdx + 0.5) * tileHeight,
-				material: new THREE.MeshStandardMaterial({color: "#C0C0C0", metalness: 0.2 })
-				})
-        	)
-        );
-
-		globeDisco = new initialGlobe()
-			.tilesData(tilesData)
-			.tileWidth(tileWidth - TILE_MARGIN)
-			.tileHeight(tileHeight - TILE_MARGIN)
-			.tileMaterial('material');
-	});
-
-	// class:selected={selected['show'] === showName}
-	// <div class="selected-station-bar" style="top: {`${$selectedStationBarHeight}px`};" />
-	// <div class="selected-show-bar" style="top: {`${$selectedShowBarHeight}px`};" />
 </script>
-
-<button on:click={handleRotateButtonClick}>click me if you dare</button>
 
 <svelte:window on:keydown|preventDefault={onKeyDown} />
 
@@ -205,7 +179,7 @@
 						/>
 					</PerspectiveCamera>
 					<AmbientLight color={'#ffffff'} intensity={1} />
-					<Object3DInstance object={globeMap} scale={0.4} rotation={{x: rotationX ,y: rotationY}} />
+					<Object3DInstance object={globeMap} scale={0.4} rotation={{x: $rotationX ,y: $rotationY}} />
 				</Canvas>
 			</div>
 			<div>
