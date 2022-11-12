@@ -37,7 +37,7 @@
 		station: currentStations ? currentStations[selectedIndexStations] : 'None yet',
 		show: currentShowNames ? currentShowNames[selectedIndexShows] : 'None yet'
 	};
-
+	
 	let rotationX, rotationY
 	$: if (selected['station'] !== 'None yet')
 		{
@@ -60,7 +60,7 @@
 	 */
 	let globeMap;
 	let globeDisco;
-	
+    
 	onMount(async () => {
         const initialGlobe = (await import('three-globe')).default;
 
